@@ -4,9 +4,93 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class BedsController extends Controller
 {
+    public function generate($data)
+    {
+        $dataConvert = [];
+        $dataInitial = $data[0]->kd_bangsal;
+        $dataInitialName = $data[0]->nm_bangsal;
+        $count = 0;
+        $countIsi = 0;
+        $countKosong = 0;
+        $index = 0;
+        Log::emergency('jumlah data', [count($data)]);
+        foreach ($data as $this_data) {
+            // Log::emergency($index);
+            $this_data_kd_bangsal = $this_data->kd_bangsal;
+            $this_data_status = $this_data->status;
+            $this_data_statusdata = $this_data->statusdata;
+            // Log::emergency($this_data->nm_bangsal, ['count' => $count, 'countIsi' => $countIsi, 'countKosong' => $countKosong]);
+
+
+            if ($this_data_kd_bangsal != $dataInitial) {
+
+                $dataConvert[] = [$dataInitialName, $count,  $countIsi, $countKosong];
+
+                $dataInitial = $this_data_kd_bangsal;
+                $dataInitialName = $this_data->nm_bangsal;
+                $count = 0;
+                $countIsi = 0;
+                $countKosong = 0;
+            }
+            $count += 1;
+            if ($this_data_status == 'ISI') {
+                $countIsi += 1;
+            } else if ($this_data_status == 'KOSONG') {
+                $countKosong += 1;
+            }
+            if (count($data) - 1 == $index) {
+                $dataConvert[] = [$dataInitialName, $count,  $countIsi, $countKosong];
+            }
+            $index += 1;
+        }
+
+        return $dataConvert;
+    }
+    public function generateRoom($data)
+    {
+        $dataConvert = [];
+        $dataInitial = $data[0]->kelas;
+        $count = 0;
+        $countIsi = 0;
+        $countKosong = 0;
+        $index = 0;
+        foreach ($data as $this_data) {
+            Log::emergency($index);
+
+            $this_data_kelas = $this_data->kelas;
+            $this_data_status = $this_data->status;
+
+
+
+            if ($this_data_kelas != $dataInitial) {
+
+                $dataConvert[] = [$dataInitial, $count,  $countIsi, $countKosong];
+                $dataInitial = $this_data->kelas;
+                $count = 0;
+                $countIsi = 0;
+                $countKosong = 0;
+            }
+            $count += 1;
+            if ($this_data_status == 'ISI') {
+                $countIsi += 1;
+            } else if ($this_data_status == 'KOSONG') {
+                $countKosong += 1;
+            }
+            Log::emergency($this_data->kelas, ['count' => $count, 'countIsi' => $countIsi, 'countKosong' => $countKosong]);
+
+            if (count($data) - 1 == $index) {
+                $dataConvert[] = [$dataInitial, $count,  $countIsi, $countKosong];
+            }
+            $index += 1;
+        }
+
+        return $dataConvert;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -14,11 +98,10 @@ class BedsController extends Controller
      */
     public function index()
     {
-        return  DB::connection('mysql2')->select("select * from kamar where kd_bangsal=B001");
-        // return  DB::connection('mysql2')->select("SELECT DISTINCT kd_bangsal FROM kamar");
-
-        $query = DB::connection('mysql2')->select('SELECT * FROM bangsal INNER JOIN kamar ON
-        bangsal.kd_bangsal = kamar.kd_bangsal WHERE bangsal.status = 2');
+        $query = DB::connection('mysql2')->select('SELECT bangsal.nm_bangsal, bangsal.kd_bangsal, kamar.statusdata, kamar.status FROM bangsal INNER JOIN kamar ON
+        bangsal.kd_bangsal = kamar.kd_bangsal WHERE bangsal.status = 2 ORDER BY bangsal.nm_bangsal');
+        $data = $this->generate($query);
+        return $data;
         return view('beds.index')->with('query', $query);
     }
 

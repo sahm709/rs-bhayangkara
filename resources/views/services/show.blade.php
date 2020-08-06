@@ -9,9 +9,9 @@
     </div>
 
     @if (!Auth::guest())
-        @if(Auth::user()->id == $posts->user_id)
-            <a href="/posts/{{$posts->id}}/edit" class="btn btn-default">Edit</a>
-            {!!Form::open(['action' => ['PostsController@destroy', $posts->id], 'method' => 'POST', 'class' => 'float-right'])!!}
+        @if(Auth::user()->id == $service->user_id)
+            <a href="/services/{{$service->id}}/edit" class="btn btn-primary">Edit</a>
+            {!!Form::open(['action' => ['ServicesController@destroy', $service->id], 'method' => 'POST', 'class' => 'float-right'])!!}
             {{Form::hidden('_method', 'DELETE')}}
             {{Form::submit('Delete', ['class' => 'btn btn-danger'])}}
             {!!Form::close()!!}
